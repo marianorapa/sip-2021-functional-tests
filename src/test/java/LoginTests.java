@@ -2,6 +2,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeTest;
@@ -33,9 +34,10 @@ public class LoginTests {
         // Setear el path del driver
         System.setProperty("webdriver.chrome.driver","src/test/resources/chromedriver");
 
-        // Instanciar y maximizar la ventana
-        driver = new ChromeDriver();
-        driver.manage().window().maximize();
+        // Instanciar sin la ventana visible
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--headless");
+        driver = new ChromeDriver(options);
     }
 
     @AfterTest
@@ -57,12 +59,11 @@ public class LoginTests {
     }
 
     @Test
-    public void whenTryingToLogIn_GivenRightCredentials_ShouldLogInWithGivenUser() {
+    public void whenTryingToLogIn_GivenRightCredentials_ShouldLogIn() {
         tryToLogInWithCredentials(USERNAME, PASSWORD);
 
-        // Validate the username displayed in the home screen
-        WebElement userProfileBtn = elementLocator.getElementClickableBy(By.xpath("//*[@id=\"app\"]/div/nav/div[2]/div[2]/div/a"));
-        Assert.assertEquals(userProfileBtn.getText(), USERNAME);
+        WebElement logo = elementLocator.getElementBy(By.xpath("//*[@id=\"app\"]/div/nav/div[1]/a[1]/img"));
+        Assert.assertTrue(logo.isDisplayed());
     }
 
     @Test
@@ -74,13 +75,24 @@ public class LoginTests {
         WebElement errorMsg = elementLocator.getElementBy(By.className("error"));
 
         // Wait until it's done processing
-        ThreadSleeperImpl.sleep(3000);
+        ThreadSleeperImpl.sleep(5000);
 
         // Assert the error is displayed
         Assert.assertEquals(errorMsg.getText(), "Error: User not registered");
     }
 
-    // ToDo: Add test given existing username and wrong password
+    @Test
+    public void whenTryingToLogin_GivenRightUsernameAndWrongPassword_ShouldDisplayErrorMsg() {
+        tryToLogInWithCredentials(USERNAME, "wrong_pwd");
+
+        // Capture error msg
+        WebElement errorMsg = elementLocator.getElementBy(By.className("error"));
+
+        // Wait until it's done processing
+        ThreadSleeperImpl.sleep(2000);
+
+        Assert.assertEquals(errorMsg.getText(), "Error: Invalid password");
+    }
 
     // ToDo: Add test given non existing username and right password
 
